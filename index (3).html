@@ -3,65 +3,156 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=600, height=600, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>IWM 30m Glasses Chart</title>
+  <meta name="color-scheme" content="dark" />
+  <title>SPY Glasses Chart</title>
   <style>
+    * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 600px;
-      height: 600px;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0; padding: 0; width: 600px; height: 600px;
+      background: #000 !important; color: #fff !important; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif; color-scheme: dark;
     }
-    .wrap {
-      width: 600px;
-      height: 600px;
-      background: #000;
+    .page { width: 600px; height: 600px; background: #000; display: flex; flex-direction: column; }
+    .hud {
+      height: 40px; background: #000; display: flex; align-items: center;
+      justify-content: space-between; padding: 0 8px; font-size: 15px; font-weight: 800; gap: 8px;
     }
-    .tradingview-widget-container,
-    .tradingview-widget-container__widget {
-      width: 600px !important;
-      height: 600px !important;
+    .pdh { color: #ff5a5a; } .pdl { color: #3dff8a; }
+    .zoom-btns { display: flex; gap: 6px; }
+    .zoom-btns button {
+      width: 44px; height: 32px; border: 2px solid #444; background: #111; color: #fff;
+      font-size: 22px; font-weight: 800; border-radius: 8px;
     }
-    .tradingview-widget-copyright {
-      display: none !important;
+    #chart { flex: 1; width: 600px; min-height: 0; background: #000; position: relative; overflow: hidden; }
+    #zoomTarget { width: 100%; height: 100%; background: #000; transform-origin: center center; }
+    #chart iframe, .tradingview-widget-container, .tradingview-widget-container__widget {
+      width: 100% !important; height: 100% !important; background: #000 !important;
     }
+    .tradingview-widget-copyright { display: none !important; }
+    .tfs { height: 64px; background: #000; display: flex; gap: 6px; padding: 8px; }
+    .tfs button {
+      flex: 1; height: 48px; border: 2px solid #444; background: #111; color: #fff;
+      font-size: 18px; font-weight: 800; border-radius: 10px; touch-action: manipulation;
+    }
+    .tfs button.active { background: #FFD700; color: #000; border-color: #FFD700; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
-      {
-        "autosize": true,
-        "symbol": "AMEX:IWM",
-        "interval": "30",
-        "timezone": "America/New_York",
-        "theme": "dark",
-        "style": "1",
-        "locale": "en",
-        "backgroundColor": "rgba(0, 0, 0, 1)",
-        "gridColor": "rgba(40, 40, 40, 0.4)",
-        "hide_top_toolbar": false,
-        "hide_legend": false,
-        "hide_side_toolbar": true,
-        "allow_symbol_change": true,
-        "save_image": false,
-        "calendar": false,
-        "hide_volume": true,
-        "compareSymbols": [
-          { "symbol": "NASDAQ:QQQ", "position": "SameScale" }
-        ],
-        "studies": [
-          "STD;EMA"
-        ],
-        "support_host": "https://www.tradingview.com"
-      }
-      </script>
+  <div class="page">
+    <div class="hud">
+      <span>SPY</span>
+      <span id="levels"><span class="pdh">PDH --</span> &nbsp; <span class="pdl">PDL --</span></span>
+      <div class="zoom-btns">
+        <button type="button" id="zoomOut">-</button>
+        <button type="button" id="zoomIn">+</button>
+      </div>
     </div>
+    <div id="chart"><div id="zoomTarget"></div></div>
+    <div class="tfs" id="tfs"></div>
   </div>
+  <script>
+    const SYM = { tv: "AMEX:SPY", yahoo: "SPY", name: "SPY" };
+    const TFS = [
+      { id: "1", label: "1m" },
+      { id: "5", label: "5m" },
+      { id: "15", label: "15m" },
+      { id: "30", label: "30m" },
+      { id: "60", label: "1H" },
+      { id: "D", label: "D" }
+    ];
+    let zoom = 1;
+    function applyZoom() {
+      document.getElementById("zoomTarget").style.transform = "scale(" + zoom + ")";
+    }
+    function bumpZoom(delta) {
+      zoom = Math.round((zoom + delta) * 10) / 10;
+      if (zoom < 1) zoom = 1;
+      if (zoom > 2.4) zoom = 2.4;
+      applyZoom();
+    }
+    function config(interval) {
+      return {
+        autosize: true, width: "100%", height: "100%",
+        symbol: SYM.tv, interval: interval, timezone: "America/New_York",
+        theme: "dark", style: "1", locale: "en",
+        backgroundColor: "#000000", gridColor: "rgba(40,40,40,0.35)",
+        hide_top_toolbar: false, hide_legend: false, hide_side_toolbar: false,
+        hide_volume: true, withdateranges: true, allow_symbol_change: false,
+        save_image: false, calendar: false,
+        studies: [
+          { id: "MASimple@tv-basicstudies", inputs: { length: 50 } },
+          { id: "MASimple@tv-basicstudies", inputs: { length: 200 } }
+        ],
+        studies_overrides: {
+          "moving average.ma.color": "#FFD700",
+          "moving average.ma.linewidth": 2,
+          "moving average_1.ma.color": "#1E90FF",
+          "moving average_1.ma.linewidth": 2
+        },
+        support_host: "https://www.tradingview.com"
+      };
+    }
+    function setActive(id) {
+      document.querySelectorAll(".tfs button").forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-tf") === id);
+      });
+    }
+    function loadChart(interval) {
+      setActive(interval);
+      try { localStorage.setItem("SPY_tf", interval); } catch (e) {}
+      const holder = document.getElementById("zoomTarget");
+      holder.innerHTML = "";
+      const wrap = document.createElement("div");
+      wrap.className = "tradingview-widget-container";
+      wrap.style.cssText = "width:100%;height:100%;background:#000;";
+      const inner = document.createElement("div");
+      inner.className = "tradingview-widget-container__widget";
+      inner.style.cssText = "width:100%;height:100%;background:#000;";
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+      script.async = true;
+      script.text = JSON.stringify(config(interval));
+      wrap.appendChild(inner); wrap.appendChild(script);
+      holder.appendChild(wrap);
+    }
+    function bind(el, fn) {
+      el.addEventListener("click", fn);
+      el.addEventListener("pointerdown", function (e) { e.preventDefault(); fn(e); });
+      el.addEventListener("touchstart", function (e) { e.preventDefault(); fn(e); }, { passive: false });
+    }
+    async function loadPdhPdl() {
+      const url = "https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=10d&includePrePost=false";
+      const tries = [url, "https://corsproxy.io/?" + encodeURIComponent(url)];
+      const box = document.getElementById("levels");
+      for (let i = 0; i < tries.length; i++) {
+        try {
+          const res = await fetch(tries[i]);
+          const json = await res.json();
+          const r = json.chart.result[0];
+          const t = r.timestamp; const q = r.indicators.quote[0];
+          const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+          let idx = t.length - 1;
+          const lastDay = new Date(t[idx] * 1000).toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+          if (lastDay === today && idx > 0) idx -= 1;
+          box.innerHTML = '<span class="pdh">PDH ' + q.high[idx].toFixed(2) + '</span> &nbsp; <span class="pdl">PDL ' + q.low[idx].toFixed(2) + '</span>';
+          return;
+        } catch (e) {}
+      }
+    }
+    TFS.forEach(function (tf) {
+      const btn = document.createElement("button");
+      btn.type = "button"; btn.textContent = tf.label; btn.setAttribute("data-tf", tf.id);
+      bind(btn, function () { loadChart(tf.id); });
+      document.getElementById("tfs").appendChild(btn);
+    });
+    bind(document.getElementById("zoomIn"), function () { bumpZoom(0.2); });
+    bind(document.getElementById("zoomOut"), function () { bumpZoom(-0.2); });
+    let start = "30";
+    try { start = localStorage.getItem("SPY_tf") || "30"; } catch (e) {}
+    const qtf = new URLSearchParams(location.search).get("tf");
+    if (qtf) start = qtf;
+    loadChart(start);
+    loadPdhPdl();
+  </script>
 </body>
 </html>
