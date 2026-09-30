@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=600, height=600, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>IWM 30m Glasses Chart</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 600px;
+      height: 600px;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .wrap {
+      width: 600px;
+      height: 600px;
+      background: #000;
+    }
+    .tradingview-widget-container,
+    .tradingview-widget-container__widget {
+      width: 600px !important;
+      height: 600px !important;
+    }
+    .tradingview-widget-copyright {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+      {
+        "autosize": true,
+        "symbol": "AMEX:IWM",
+        "interval": "30",
+        "timezone": "America/New_York",
+        "theme": "dark",
+        "style": "1",
+        "locale": "en",
+        "backgroundColor": "rgba(0, 0, 0, 1)",
+        "gridColor": "rgba(40, 40, 40, 0.4)",
+        "hide_top_toolbar": false,
+        "hide_legend": false,
+        "hide_side_toolbar": true,
+        "allow_symbol_change": true,
+        "save_image": false,
+        "calendar": false,
+        "hide_volume": true,
+        "compareSymbols": [
+          { "symbol": "NASDAQ:QQQ", "position": "SameScale" }
+        ],
+        "studies": [
+          "STD;EMA"
+        ],
+        "support_host": "https://www.tradingview.com"
+      }
+      </script>
+    </div>
+  </div>
+</body>
+</html>
